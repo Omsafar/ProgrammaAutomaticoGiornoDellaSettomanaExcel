@@ -1,0 +1,57 @@
+﻿<Window x:Class="ProgrammaAutomaticoGiornoDellaSettomanaExcel.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ProgrammaAutomaticoGiornoDellaSettomanaExcel"
+        mc:Ignorable="d"
+        Title="Foglio Programmi" Height="450" Width="600">
+
+    <Window.DataContext>
+        <local:MainViewModel/>
+    </Window.DataContext>
+
+    <Grid Margin="20">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="10"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 1. scelta file -->
+        <StackPanel Orientation="Horizontal" Grid.Row="0">
+            <Button Content="Apri;Excel…" Command="{Binding SfogliaExcelCommand}" Margin="0,0,8,0"/>
+            <TextBlock Text="{Binding FilePath}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+        </StackPanel>
+
+        <!-- 2. nuova voce -->
+        <StackPanel Orientation="Horizontal" Grid.Row="2">
+            <TextBox Width="200" Text="{Binding NuovaVoce, UpdateSourceTrigger=PropertyChanged}" Margin="0,0,8,0"/>
+            <Button Content="Aggiungi" Command="{Binding AggiungiCommand}"/>
+        </StackPanel>
+
+        <!-- 3. elenco voci -->
+        <ListBox Grid.Row="4" ItemsSource="{Binding Voci}">
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="{Binding}" Margin="0,0,8,0"/>
+                        <Button Content="Rimuovi"
+                                Command="{Binding DataContext.RimuoviCommand,
+                                                  RelativeSource={RelativeSource AncestorType=Window}}"
+                                CommandParameter="{Binding}"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- 4. elabora -->
+        <Button Grid.Row="6" Content="Elabora foglio"
+                HorizontalAlignment="Right" Width="120"
+                Command="{Binding ElaboraCommand}"/>
+    </Grid>
+</Window>
