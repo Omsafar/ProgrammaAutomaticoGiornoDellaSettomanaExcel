@@ -5,6 +5,7 @@ using Microsoft.Win32;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 
 namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel;
     public partial class MainViewModel : ObservableObject
@@ -12,20 +13,30 @@ namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel;
         public ObservableCollection<string> Voci { get; } =
             new(SheetEntryStore.Load());
 
-        [ObservableProperty] private string? nuovaVoce;
-        [ObservableProperty] private string? filePath;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AggiungiCommand))]
+    private string? nuovaVoce;
 
-        /* ========================  Comandi  ======================== */
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ElaboraCommand))]
+    private string? filePath;
 
-        [RelayCommand(CanExecute = nameof(CanAggiungi))]
+    /* ========================  Comandi  ======================== */
+
+    [RelayCommand(CanExecute = nameof(CanAggiungi))]
         private void Aggiungi()
         {
-            if (string.IsNullOrWhiteSpace(NuovaVoce)) return;
-            if (!Voci.Contains(NuovaVoce))
-                Voci.Add(NuovaVoce);
-            NuovaVoce = string.Empty;
-        }
-        private bool CanAggiungi() => !string.IsNullOrWhiteSpace(NuovaVoce);
+        if (string.IsNullOrWhiteSpace(NuovaVoce))
+            return;
+
+        var voce = NuovaVoce.Trim();
+        bool giaPresente = Voci.Any(v =>
+            string.Equals(v, voce, StringComparison.OrdinalIgnoreCase));
+        if (!giaPresente)
+            Voci.Add(voce);
+        NuovaVoce = string.Empty;
+    }
+    private bool CanAggiungi() => !string.IsNullOrWhiteSpace(NuovaVoce);
 
         [RelayCommand]
         private void Rimuovi(string voce)
@@ -59,8 +70,11 @@ namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel;
 
             foreach (var voce in Voci)
             {
-                if (wb.Worksheets.TryGetWorksheet(voce, out var ws))
-                    ws.Cell("A1").Value = header;
+            var ws = wb.Worksheets
+                         .FirstOrDefault(s => string.Equals(s.Name, voce,
+                                                 StringComparison.OrdinalIgnoreCase));
+            if (ws is not null)
+                ws.Cell("A1").Value = header;
             }
             wb.Save(); // sovrascrive il file
         }
