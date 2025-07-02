@@ -5,8 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProgrammaAutomaticoGiornoDellaSettomanaExcel"
         mc:Ignorable="d"
-        Title="Foglio Programmi" Height="450" Width="600">
-
+        Title="Foglio Programmi" Height="500" Width="600">
     <Window.DataContext>
         <local:MainViewModel/>
     </Window.DataContext>
@@ -14,17 +13,32 @@
     <Grid Margin="20">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
+            <!-- File selector -->
             <RowDefinition Height="10"/>
+            <!-- Spacer -->
             <RowDefinition Height="Auto"/>
+            <!-- New voce -->
             <RowDefinition Height="10"/>
+            <!-- Spacer -->
+            <RowDefinition Height="Auto"/>
+            <!-- DatePicker -->
+            <RowDefinition Height="10"/>
+            <!-- Spacer -->
             <RowDefinition Height="*"/>
+            <!-- ListBox -->
             <RowDefinition Height="10"/>
+            <!-- Spacer -->
             <RowDefinition Height="Auto"/>
+            <!-- Status -->
+            <RowDefinition Height="10"/>
+            <!-- Spacer -->
+            <RowDefinition Height="Auto"/>
+            <!-- Elabora button -->
         </Grid.RowDefinitions>
 
         <!-- 1. scelta file -->
         <StackPanel Orientation="Horizontal" Grid.Row="0">
-            <Button Content="Apri;Excel…" Command="{Binding SfogliaExcelCommand}" Margin="0,0,8,0"/>
+            <Button Content="Apri Excel…" Command="{Binding SfogliaExcelCommand}" Margin="0,0,8,0"/>
             <TextBlock Text="{Binding FilePath}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
         </StackPanel>
 
@@ -34,24 +48,30 @@
             <Button Content="Aggiungi" Command="{Binding AggiungiCommand}"/>
         </StackPanel>
 
-        <!-- 3. elenco voci -->
-        <ListBox Grid.Row="4" ItemsSource="{Binding Voci}">
+        <!-- 3. selezione data -->
+        <StackPanel Orientation="Horizontal" Grid.Row="4" VerticalAlignment="Center">
+            <TextBlock Text="Data da usare:" VerticalAlignment="Center" Margin="0,0,8,0"/>
+            <DatePicker SelectedDate="{Binding SelectedDate}"/>
+        </StackPanel>
+
+        <!-- 4. elenco voci -->
+        <ListBox Grid.Row="6" ItemsSource="{Binding Voci}">
             <ListBox.ItemTemplate>
                 <DataTemplate>
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="{Binding}" Margin="0,0,8,0"/>
                         <Button Content="Rimuovi"
-                                Command="{Binding DataContext.RimuoviCommand,
-                                                  RelativeSource={RelativeSource AncestorType=Window}}"
+                                Command="{Binding DataContext.RimuoviCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                 CommandParameter="{Binding}"/>
                     </StackPanel>
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
 
-        <!-- 4. elabora -->
-        <Button Grid.Row="6" Content="Elabora foglio"
-                HorizontalAlignment="Right" Width="120"
-                Command="{Binding ElaboraCommand}"/>
+        <!-- 5. status -->
+        <TextBlock Grid.Row="8" Text="{Binding Status}" FontWeight="Bold" HorizontalAlignment="Left"/>
+
+        <!-- 6. pulsante elabora -->
+        <Button Grid.Row="10" Content="Elabora foglio" Command="{Binding ElaboraCommand}" Width="120" HorizontalAlignment="Right"/>
     </Grid>
 </Window>

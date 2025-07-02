@@ -2,48 +2,50 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using ClosedXML.Excel;
 using Microsoft.Win32;
+using System;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Windows;
 
-namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel;
+namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel
+{
     public partial class MainViewModel : ObservableObject
     {
-        public ObservableCollection<string> Voci { get; } =
-            new(SheetEntryStore.Load());
+        public ObservableCollection<string> Voci { get; } = new(SheetEntryStore.Load());
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AggiungiCommand))]
-    private string? nuovaVoce;
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(AggiungiCommand))]
+        private string? nuovaVoce;
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(ElaboraCommand))]
-    private string? filePath;
+        [ObservableProperty]
+        [NotifyCanExecuteChangedFor(nameof(ElaboraCommand))]
+        private string? filePath;
 
-    /* ========================  Comandi  ======================== */
+        // Proprietà selezione data (default domani)
+        [ObservableProperty]
+        private DateTime selectedDate = DateTime.Today.AddDays(1);
 
-    [RelayCommand(CanExecute = nameof(CanAggiungi))]
+        // Proprietà status per il binding
+        [ObservableProperty]
+        private string status = string.Empty;
+
+        /* ========================  Comandi  ======================== */
+
+        [RelayCommand(CanExecute = nameof(CanAggiungi))]
         private void Aggiungi()
         {
-        if (string.IsNullOrWhiteSpace(NuovaVoce))
-            return;
-
-        var voce = NuovaVoce.Trim();
-        bool giaPresente = Voci.Any(v =>
-            string.Equals(v, voce, StringComparison.OrdinalIgnoreCase));
-        if (!giaPresente)
-            Voci.Add(voce);
-        NuovaVoce = string.Empty;
-    }
-    private bool CanAggiungi() => !string.IsNullOrWhiteSpace(NuovaVoce);
+            if (string.IsNullOrWhiteSpace(NuovaVoce)) return;
+            var voce = NuovaVoce.Trim();
+            if (!Voci.Any(v => string.Equals(v, voce, StringComparison.OrdinalIgnoreCase)))
+                Voci.Add(voce);
+            NuovaVoce = string.Empty;
+        }
+        private bool CanAggiungi() => !string.IsNullOrWhiteSpace(NuovaVoce);
 
         [RelayCommand]
-        private void Rimuovi(string voce)
-        {
-            Voci.Remove(voce);
-        }
+        private void Rimuovi(string voce) => Voci.Remove(voce);
 
         [RelayCommand]
         private void SfogliaExcel()
@@ -60,28 +62,42 @@ namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel;
         [RelayCommand(CanExecute = nameof(HasFile))]
         private void Elabora()
         {
-            if (!File.Exists(FilePath)) return;
+            Status = "Elaborazione...";
 
-            using var wb = new XLWorkbook(FilePath);
-            var oggi = DateTime.Today;
-            var giorno = CultureInfo.GetCultureInfo("it-IT")
-                                    .DateTimeFormat
-                                    .GetDayName(oggi.DayOfWeek);
-            var header = $"Programma di {giorno} {oggi:dd/MM/yyyy}";
-
-            foreach (var voce in Voci)
+            if (!File.Exists(FilePath))
             {
-            var ws = wb.Worksheets
-                         .FirstOrDefault(s => string.Equals(s.Name, voce,
-                                                 StringComparison.OrdinalIgnoreCase));
-            if (ws is not null)
-                ws.Cell("A1").Value = header;
+                Status = "File non trovato";
+                return;
             }
-            wb.Save(); // sovrascrive il file
-        MessageBox.Show("Elaborazione Terminata");
-    }
+
+            try
+            {
+                using var wb = new XLWorkbook(FilePath);
+                var data = SelectedDate;
+                var giorno = CultureInfo.GetCultureInfo("it-IT")
+                                        .DateTimeFormat
+                                        .GetDayName(data.DayOfWeek);
+                var header = $"Programma di {giorno} {data:dd/MM/yyyy}";
+
+                foreach (var voce in Voci)
+                {
+                    var ws = wb.Worksheets
+                                 .FirstOrDefault(s => string.Equals(s.Name, voce,
+                                                      StringComparison.OrdinalIgnoreCase));
+                    if (ws is not null)
+                        ws.Cell("A1").Value = header;
+                }
+                wb.Save();
+                Status = "Finito";
+            }
+            catch (Exception ex)
+            {
+                Status = $"Errore: {ex.Message}";
+            }
+        }
         private bool HasFile() => !string.IsNullOrWhiteSpace(FilePath);
 
-        /* =======  Chiamato alla chiusura finestra (App.xaml.cs) ======= */
+        // Salvataggio voci alla chiusura
         public void Persisti() => SheetEntryStore.Save(Voci);
     }
+}
