@@ -19,6 +19,11 @@ namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel
         public MainWindow()
         {
             InitializeComponent();
+            this.Closing += (_, __) =>
+            {
+                if (DataContext is MainViewModel vm)
+                    vm.Persisti();
+            };
         }
     }
 }

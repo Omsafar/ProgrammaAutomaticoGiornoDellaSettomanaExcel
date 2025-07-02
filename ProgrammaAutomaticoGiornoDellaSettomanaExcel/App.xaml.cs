@@ -1,12 +1,14 @@
 ﻿using System.Windows;
-namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel;
 
-public partial class App : Application
+namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel
 {
-    protected override void OnExit(ExitEventArgs e)
+    public partial class App : Application
     {
-        if (MainWindow?.DataContext is MainViewModel vm)
-            vm.Persisti();
-        base.OnExit(e);
+        protected override void OnExit(ExitEventArgs e)
+        {
+            if (MainWindow?.DataContext is MainViewModel vm)
+                vm.Persisti();
+            base.OnExit(e);
+        }
     }
 }

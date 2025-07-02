@@ -6,6 +6,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Windows;
 
 namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel;
     public partial class MainViewModel : ObservableObject
@@ -77,7 +78,8 @@ namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel;
                 ws.Cell("A1").Value = header;
             }
             wb.Save(); // sovrascrive il file
-        }
+        MessageBox.Show("Elaborazione Terminata");
+    }
         private bool HasFile() => !string.IsNullOrWhiteSpace(FilePath);
 
         /* =======  Chiamato alla chiusura finestra (App.xaml.cs) ======= */
