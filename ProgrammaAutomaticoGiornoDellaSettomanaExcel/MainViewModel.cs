@@ -7,6 +7,7 @@ using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel
@@ -23,11 +24,11 @@ namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel
         [NotifyCanExecuteChangedFor(nameof(ElaboraCommand))]
         private string? filePath;
 
-        // Proprietà selezione data (default domani)
+        // ProprietÃ  selezione data (default domani)
         [ObservableProperty]
         private DateTime selectedDate = DateTime.Today.AddDays(1);
 
-        // Proprietà status per il binding
+        // ProprietÃ  status per il binding
         [ObservableProperty]
         private string status = string.Empty;
 
@@ -60,9 +61,9 @@ namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel
         }
 
         [RelayCommand(CanExecute = nameof(HasFile))]
-        private void Elabora()
+        private async Task ElaboraAsync()
         {
-            Status = "Elaborazione...";
+            Status = "Sto elaborando il foglio";
 
             if (!File.Exists(FilePath))
             {
@@ -72,23 +73,26 @@ namespace ProgrammaAutomaticoGiornoDellaSettomanaExcel
 
             try
             {
-                using var wb = new XLWorkbook(FilePath);
-                var data = SelectedDate;
-                var giorno = CultureInfo.GetCultureInfo("it-IT")
-                                        .DateTimeFormat
-                                        .GetDayName(data.DayOfWeek);
-                var header = $"Programma di {giorno} {data:dd/MM/yyyy}";
-
-                foreach (var voce in Voci)
+                await Task.Run(() =>
                 {
-                    var ws = wb.Worksheets
-                                 .FirstOrDefault(s => string.Equals(s.Name, voce,
-                                                      StringComparison.OrdinalIgnoreCase));
-                    if (ws is not null)
-                        ws.Cell("A1").Value = header;
-                }
-                wb.Save();
-                Status = "Finito";
+                    using var wb = new XLWorkbook(FilePath);
+                    var data = SelectedDate;
+                    var giorno = CultureInfo.GetCultureInfo("it-IT")
+                                            .DateTimeFormat
+                                            .GetDayName(data.DayOfWeek);
+                    var header = $"Programma di {giorno} {data:dd/MM/yyyy}";
+
+                    foreach (var voce in Voci)
+                    {
+                        var ws = wb.Worksheets
+                                     .FirstOrDefault(s => string.Equals(s.Name, voce,
+                                                              StringComparison.OrdinalIgnoreCase));
+                        if (ws is not null)
+                            ws.Cell("A1").Value = header;
+                    }
+                    wb.Save();
+                });
+                Status = "Elaborazione Terminata";
             }
             catch (Exception ex)
             {
